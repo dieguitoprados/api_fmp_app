@@ -5,3 +5,4 @@ numpy
 importlib
 datetime
 scipy
+pandas_datareader
