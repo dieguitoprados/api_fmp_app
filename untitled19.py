@@ -10,12 +10,24 @@ import pandas as pd
 import numpy as np
 import requests
 import fmpsdk as fmp
+import importlib
+import datetime as dt
 
 
+import file_classes
+importlib.reload(file_classes)
+import file_functions
+importlib.reload(file_functions)
+import untitled11
+importlib.reload(untitled11)
 
 
 option=st.sidebar.selectbox("Options",('Balance Sheet','Income Statement','Cashflow Statement',
                                        'Ratios', 'Stats', 'Price Chart',))
+
+
+end=dt.datetime.now()
+start=[end-dt.timedelta(days=253)]
 
 apikey='d60d2f087ecf05f94a3b9b3df34310a9'
 symbol= st.text_input("stock", '')
@@ -88,4 +100,15 @@ if symbol != '':
         prices=pd.DataFrame()
         pricess=requests.get('https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol=IBM&interval=5min&apikey=demo').json()['Time Series (5min)']
 
+    if option == 'Stats':
+        api=untitled11.api_yahoo(start, end, symbol)
+        api.load()
+        df=api.df
+        change=api.change
+        api.compute()
+        stats=api.stats
+        api.loadtimeseries()
+        api.loadtimeseries_log()
+        api.plot_histogram()
+        cov_matrix=change.cov()
                 
