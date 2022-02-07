@@ -101,7 +101,7 @@ if symbol != '':
         pricess=requests.get('https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol=IBM&interval=5min&apikey=demo').json()['Time Series (5min)']
 
     if option == 'Stats':
-        api=untitled11.api_yahoo(start, end, symbol)
+        api=untitled11.api_yahoo()
         api.load()
         df=api.df
         change=api.change
