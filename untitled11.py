@@ -24,11 +24,6 @@ import file_functions
 importlib.reload(file_functions)
 
 
-start=dt.datetime(2016, 1, 1)
-end=dt.datetime.now
-stocks=['CME', 'SI', 'NVDA', 'TWTR', 'FB', 'TSLA', 'LCID']
-
-
 class api_yahoo():
     
     def __init__(self, start, end, symbol):
