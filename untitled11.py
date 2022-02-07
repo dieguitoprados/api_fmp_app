@@ -31,10 +31,10 @@ stocks=['CME', 'SI', 'NVDA', 'TWTR', 'FB', 'TSLA', 'LCID']
 
 class api_yahoo():
     
-    def __init__(self, start, end, stocks):
+    def __init__(self, start, end, symbol):
         self.start=start
         self.end=end
-        self.stocks=stocks
+        self.stocks=symbol
         self.df=None
         self.change=None
         self.shape=None
