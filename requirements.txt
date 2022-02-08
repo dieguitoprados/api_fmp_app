@@ -6,3 +6,4 @@ importlib
 datetime
 scipy
 pandas_datareader
+plotly
