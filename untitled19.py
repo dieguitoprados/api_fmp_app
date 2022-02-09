@@ -25,7 +25,8 @@ import plotly as px
 
 
 option=st.sidebar.selectbox("Options",('Home', 'Financials', 'Valuation', 'Social Sentiment', 'lol',
-                                       'Ratios', 'Stats', 'Charts and TA', 'News', 'Screener', 'Sec Filings', 'Insider Transactions', 'Options'))
+                                       'Stats', 'Charts and TA', 'News', 'Screener', 'Sec Filings',
+                                       'Insider Transactions', 'Options'))
 
 
 end=dt.datetime.now()
@@ -49,6 +50,7 @@ if symbol != '':
             balance_sheet=balance_sheet[balance_sheet.columns[::-1]]
             # balance_sheet=balance_sheet.astype(str)
             st.header("Balance Sheet")
+            st.markdown('Currency: '+str(balance_sheets[0]['reportedCurrency']))
             st.subheader("Current Assets")
             current_ass = balance_sheet.iloc[8:15,:]
             st.dataframe(current_ass)            
@@ -64,7 +66,7 @@ if symbol != '':
             st.subheader("Equity")            
             equity = balance_sheet.iloc[39:52,:]
             st.dataframe(equity)      
-            opt=st.selectbox('Histogram', ('Current Assets','Non Current Assets','Current Liabilities','Non Current Liabilities','Equity', 'Net Debt',
+            opt=st.selectbox('Histogram', ('totalCurrentAssets','totalNonCurrentAssets','totalCurrentLiabilities','totalNonCurrentLiabilities','totalEquity', 'netDebt',
             'cashAndCashEquivalents','shortTermInvestments','cashAndShortTermInvestments','netReceivables',
             'inventory','otherCurrentAssets','propertyPlantEquipmentNet','goodwill','intangibleAssets','goodwillAndIntangibleAssets',
             'longTermInvestments','taxAssets','otherNonCurrentAssets','totalNonCurrentAssets','otherAssets',
@@ -73,17 +75,34 @@ if symbol != '':
             'otherLiabilities','capitalLeaseObligations','preferredStock','commonStock','retainedEarnings',
             'accumulatedOtherComprehensiveIncomeLoss','othertotalStockholdersEquity','totalStockholdersEquity','totalLiabilitiesAndStockholdersEquity',
             'minorityInterest'))
-            df_statement=pd.DataFrame()
+            # df_statement=pd.DataFrame()
+            # df_statement['index']=[opt]
+            # df_statement=df_statement.set_index('index')
+            # for i in range(0,len(balance_sheets)):
+            #     df_statement[balance_sheets[i]['date']]=balance_sheets[i][opt]
+            # df_statement=df_statement[df_statement.columns[::-1]]
+            # df_statement=df_statement.transpose()
+            dates=pd.DataFrame()
+            dates['index']=[0]
+            dates=dates.set_index('index')
             for i in range(0,len(balance_sheets)):
-                df_statement[balance_sheets[i]['date']]=balance_sheets[i][opt]
-                
-            fig=px.plot(df_statement,kind='histogram')
-            st.plotly_chart(fig)
+                dates[balance_sheets[i]['date']]=str(balance_sheets[i]['date'])
+            dates=dates[dates.columns[::-1]]
+            dates=dates.transpose()    
+            # fig=px.plot(df_statement,kind='histogram')
+            # st.plotly_chart(fig)
             
-            
+            fig = plt.figure()
+            # plt.hist(df_statement.iloc[0],bins=100)
+            ax = fig.add_axes([0,0,1,1])
+            plt.title(opt)
+            ax.bar(dates[0],balance_sheet.loc[opt])
+            plt.yscale('log')
+            # ax = fig.add_axes([0,0,1,1])
+            # ax.bar(dates,df_statement.iloc[0])            
             # if opt ==  'Current Assets':
-            #     fig=px.bar(balance_sheet.iloc[14])
-            #     st.image(plt.show())
+            # fig=df_statement.iloc[0].plot
+            st.pyplot(fig)
             
             # balplot=px.data.gapminder().query(opt)
             # fig=px.bar(balplot)
@@ -97,12 +116,50 @@ if symbol != '':
             income_statement['index']=income_statements[0].keys()
             income_statement=income_statement.set_index('index')
             for i in range(0,len(income_statements)):
-                
                 income_statement[income_statements[i]['date']]=income_statements[i].values()
             income_statement=income_statement[income_statement.columns[::-1]]
-            income_statement=income_statement.astype(str)
             st.header("Income Statement")
-            st.dataframe(income_statement)
+            st.markdown('Currency: ' + income_statements[0]['reportedCurrency'])
+            st.subheader("Revenues")
+            revenues=income_statement.iloc[8:11,:]
+            st.dataframe(revenues)
+            st.subheader("Operating Expenses & Income")
+            opex=income_statement.iloc[12:19,:]
+            opex.loc['operatingIncome']=income_statement.loc['operatingIncome']
+            st.dataframe(opex)
+            st.subheader("EBITDA")
+            ebitda=income_statement.iloc[20:23,:]
+            st.dataframe(ebitda)
+            st.subheader("EBT")
+            ebt=income_statement.iloc[26:28,:]
+            st.dataframe(ebt)
+            st.subheader("Net Income")
+            net_inc=income_statement.iloc[29:31,:]
+            st.dataframe(net_inc)
+            
+            opt=st.selectbox('Histogram', ('revenue', 'costOfRevenue', 'grossProfit', 'researchAndDevelopmentExpenses',
+                                           'generalAndAdministrativeExpenses', 'sellingAndMarketingExpenses', 'sellingGeneralAndAdministrativeExpenses',
+                                           'otherExpenses', 'operatingExpenses', 'operatingIncome', 'costAndExpenses',
+                                           'interestIncome', 'interestExpense', 'depreciationAndAmortization', 'ebitda', 'totalOtherIncomeExpensesNet',
+                                           'incomeBeforeTax', 'incomeTaxExpense', 'netIncome', 'eps', 'epsdiluted', 'weightedAverageShsOut','weightedAverageShsOutDil' ))
+            
+            
+            dates=pd.DataFrame()
+            dates['index']=[0]
+            dates=dates.set_index('index')
+            for i in range(0,len(income_statements)):
+                dates[income_statements[i]['date']]=str(income_statements[i]['date'])
+            dates=dates[dates.columns[::-1]]
+            dates=dates.transpose()
+            fig = plt.figure()
+            ax = fig.add_axes([0,0,1,1])
+            plt.title(opt)
+            ax.bar(dates[0],income_statement.loc[opt])
+            plt.yscale('log')
+            st.pyplot(fig)
+            
+            
+
         
         if data == 'Cashflow Statement':
         
@@ -123,7 +180,7 @@ if symbol != '':
             st.header("Cashflow Statement")    
             st.dataframe(cashflow_statement)
             
-    if option == 'Ratios':
+    if option == 'Valuation':
     
         ratioss=fmp.company_valuation.financial_ratios_ttm(apikey, symbol)
         ratios=pd.DataFrame()
