@@ -174,12 +174,12 @@ if symbol != '':
         #Activity Ratios
         # ls['Inventary turnover']=
         
-        # Liquidity & solvency
+        # Liquidity 
         ls['Current ratio']=balance_sheet.loc['totalCurrentAssets']/balance_sheet.loc['totalCurrentLiabilities']
         ls['Quick ratio']=(balance_sheet.loc['cashAndShortTermInvestments']+balance_sheet.loc['netReceivables'])/balance_sheet.loc['totalCurrentLiabilities']
         ls['Cash ratio']=balance_sheet.loc['cashAndShortTermInvestments']/balance_sheet.loc['totalCurrentLiabilities']
         ls['Defensive interval']=(balance_sheet.loc['cashAndShortTermInvestments']+balance_sheet.loc['netReceivables'])/dex
-        
+        #Solvency
         ls['Debt to assets']=balance_sheet.loc['totalLiabilities']/balance_sheet.loc['totalAssets']
         ls['Debt to capital']=balance_sheet.loc['totalLiabilities']/(balance_sheet.loc['totalStockholdersEquity']+balance_sheet.loc['totalLiabilities'])
         ls['Debt to equity']=balance_sheet.loc['totalLiabilities']/balance_sheet.loc['totalStockholdersEquity']
@@ -197,7 +197,7 @@ if symbol != '':
         #Profitability(margenes-returns-)
         ls['Gross profit margin']=income_statement.loc['grossProfitRatio']
         ls['Operating Margin']=income_statement.loc['operatingIncomeRatio']
-        ls['EBT ratio']=income_statement.loc['incomeBeforeTaxRatio']
+        ls['EBT Margin']=income_statement.loc['incomeBeforeTaxRatio']
         ls['Net profit margin']=income_statement.loc['netIncomeRatio']
         
         ls['Operating ROA']=income_statement.loc['operatingIncome']/balance_sheet.loc['totalAssets']
@@ -228,21 +228,45 @@ if symbol != '':
             st.dataframe(ratios)
         if opt == 'Liquidity & Solvency':
             l=ls.transpose()            
-            l=l.iloc[0:8,:]
+            li=l.iloc[0:4,:]
+            lit=l.iloc[0:3,:].transpose()
+            so=l.iloc[4:9,:]
+            st.subheader('Liquidity')
+            st.dataframe(li)
+            st.subheader('Solvency')
+            st.dataframe(so)
+            
+            pl=st.selectbox('Plot', ('Liquidity', 'Solvency'))
+            if pl == 'Liquidity':
+                fig=plt.figure(figsize=(12,5))
+                plt.title('Liquidity ratios')
+                plt.xlabel('Time')
+                # plt.plot(self.data_table['date'],self.data_table['price2'], self.data_table['price1'])
+                ax = plt.gca()
+                for elements in lit:
+                    elements=lit[elements].plot(kind='line', ax=ax, grid=True, label=elements)
+                    elements.legend(loc=2)
+                plt.yscale('log')    
 
-            st.dataframe(l)
+                st.pyplot(fig)
+
             
             na=st.multiselect('Plot', ['','Current ratio','Quick ratio','Cash ratio','Defensive interval',
                                       'Debt to assets','Debt to capital','Debt to equity','Leverage ratio','FFO to Debt' ])
-            # fig=plt.figure()
-            # plt.title(symbol)
-            # ax = plt.gca()
-            # ax1 = ls[na].plot(kind='line', x=dates, ax=ax, grid=True,\
-            #                           color='blue', label=na)
-                
-            # ax1.legend(loc=2)
-            # st.pyplot(fig)
+        if opt=='Profitability & Efficiency':
+            o=ls.transpose()
             
+            i=o.iloc[9:12]
+            n=o.iloc[16:21,:]
+            l=o.iloc[13:16,:]
+            st.subheader('Interest coverage')
+
+            st.dataframe(i)
+            st.subheader('Efficiency')
+            st.dataframe(n)
+            st.subheader('Profitability')
+            st.dataframe(l)
+
             
     if option == 'Price Chart':
         st.subheader('Intraday')
