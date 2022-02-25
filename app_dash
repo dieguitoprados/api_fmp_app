@@ -1,0 +1,57 @@
+# Run this app with `python app.py` and
+# visit http://127.0.0.1:8050/ in your web browser.
+import requests
+from dash import Dash, dcc, html, Input, Output
+import plotly.graph_objects as go
+import plotly.express as px
+import pandas as pd
+
+app = Dash(__name__)
+
+# assume you have a "long-form" data frame
+# see https://plotly.com/python/px-arguments/ for more options
+
+
+app.layout = html.Div(children=[
+    
+    dcc.Input(id='my-input', value='', type='text'),
+    
+    html.Label('Options'),
+    dcc.Dropdown(['Home', 'Financials', 'Valuation','Charts','News','SEC Filings','','','',], 'Home'),
+    
+    html.H1(children='Diego Prados Dashboard'),
+
+    html.Div(children='''
+        Dash: A web application framework for your data.
+    '''),
+
+    dcc.Graph(
+        id='graph'
+    )
+])
+             
+@app.callback(
+    Output('graph', 'figure'),
+    Input('my-input', 'value'),         
+    Input('drop', 'text'))
+    
+def update_data(input_value):
+    
+    url = f'https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol={input_value}&outputsize=full&apikey=I9MAV4MUJC2LWW69'
+    r = requests.get(url)
+    data = r.json()
+    now=pd.DataFrame(data['Time Series (Daily)'])
+    
+    fig = go.Figure(data=go.Candlestick(x=now.columns,
+                        open=now.loc['1. open'],
+                        high=now.loc['2. high'],
+                        low=now.loc['3. low'],
+                        close=now.loc['4. close']))
+    return fig
+             
+             
+             
+if __name__ == '__main__':
+    app.run_server(debug=True)
+
+
