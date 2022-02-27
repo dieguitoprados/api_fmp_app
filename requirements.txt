@@ -7,3 +7,4 @@ datetime
 scipy
 pandas_datareader
 plotly
+scipy
