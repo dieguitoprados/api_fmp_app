@@ -362,7 +362,7 @@ if symbol != '':
             if source == 'Marketaux':
               r=requests.get(f'https://api.marketaux.com/v1/news/all?symbols={symbol}&filter_entities=true&language=en&api_token=1ZG29ExpDNcP5ka065e0h4rxpasuJeWqwu4Qgj9c').json()
               for i in range(0,len(r['data'])):
-                  st.image(r['data'][0]['image_url'])
+                  st.image(r['data'][i]['image_url'])
                   st.header(r['data'][i]['title'])
                   st.markdown(r['data'][i]['description'])
                   st.markdown(r['data'][i]['url'])  
