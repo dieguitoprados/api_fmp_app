@@ -8,3 +8,4 @@ scipy
 pandas_datareader
 plotly
 scipy
+emoji-country-flag
