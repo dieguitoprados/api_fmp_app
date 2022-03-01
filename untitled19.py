@@ -351,14 +351,21 @@ if symbol != '':
     if option== 'News':
         select=st.selectbox('Options', ('News and articles','Press releases'))
         if select == 'News and articles':
-            news=fmp.stock_news(apikey, symbol, 20)
-            st.image(news[0]['image'])
-            for i in range(0,len(news)):
-                st.subheader('*'+news[i]['site']+'*'+' | '+news[i]['title'])
-                st.markdown(news[i]['text'])
-                st.markdown(news[i]['publishedDate']+' | '+news[i]['url'])
-                
-                
+            source=st.selectbox('Source', ('FMP','Marketaux'))
+            if source == 'FMP':
+              news=fmp.stock_news(apikey, symbol, 20)
+              st.image(news[0]['image'])
+              for i in range(0,len(news)):
+                  st.subheader('*'+news[i]['site']+'*'+' | '+news[i]['title'])
+                  st.markdown(news[i]['text'])
+                  st.markdown(news[i]['publishedDate']+' | '+news[i]['url'])
+            if source == 'Marketaux':
+              r=requests.get(f'https://api.marketaux.com/v1/news/all?symbols={symbol}&filter_entities=true&language=en&api_token=1ZG29ExpDNcP5ka065e0h4rxpasuJeWqwu4Qgj9c').json()
+              st.image(r['data'][0]['image_url'])  
+              for i in range(0,len(r['data'])):
+                  st.header(r['data'][i]['title'])
+                  st.markdown(r['data'][i]['description'])
+                  st.markdown(r['data'][i]['url'])  
         
         
         
