@@ -13,7 +13,8 @@ import fmpsdk as fmp
 import importlib
 import datetime as dt
 import matplotlib.pyplot as plt
-import plotly as px
+import plotly as pt
+import plotly.express as px
 import plotly.graph_objects as go
 import scipy.stats as scipy
 apikey='d60d2f087ecf05f94a3b9b3df34310a9'
@@ -87,17 +88,20 @@ if main == 'Stocks':
     symbol= st.text_input("stock", '')
     url= f'https://financialmodelingprep.com/image-stock/{symbol}.png'
     st.image(url)
-    option=st.sidebar.selectbox("Options",('Home', 'Financials', 'Valuation', 'News',
+    option=st.sidebar.selectbox("Options",('Home', 'Financials', 'Horizontal', 'Valuation', 'News',
                                            'Stats', 'Technical analysis', 'Screener', 'SEC Filings',
                                            'Insider Transactions', 'Options', 'Social Sentiment'))
     
     
     end=dt.datetime.now()
     start=[end-dt.timedelta(days=365*10)]
+
+    prices=fmp.historical_chart(apikey, symbol, '4hour')
+    p=pd.DataFrame(prices)
+    p=p.set_index(p['date'])
+    # fig = px.line(p, x='date', y='close', title='Price of '+symbol+' || '+"price in "+fmp.balance_sheet_statement(apikey, symbol)[0]['reportedCurrency'])
     
-    apikey='d60d2f087ecf05f94a3b9b3df34310a9'
-    
-    
+    # st.plotly_chart(fig)
     
     if symbol != '':
         
@@ -108,7 +112,10 @@ if main == 'Stocks':
             st.header(str(o[0]['companyName'])+' | '+str(o[0]['exchange'])+' | '+str(o[0]['symbol'])+
                       ' | ISIN:'+str(o[0]['isin'])+' | CIK:'+str(o[0]['cik']))
             st.metric('Price',str(o[0]['price'])+' '+o[0]['currency'], str(np.round(o[0]['changes'],4))+'  |  '+str(np.round(np.round(o[0]['changes'],4)/(o[0]['price']-np.round(o[0]['changes'],4))*100,4))+'%')
-            st.subheader('Sector and industry: '+str(o[0]['sector'])+' | '+str(o[0]['industry']))       
+            st.markdown('Sector and industry: '+str(o[0]['sector'])+' | '+str(o[0]['industry'])) 
+            
+            
+            
             st.subheader('Company profile')
             st.markdown(str(o[0]['description']))
             st.subheader('Website')
@@ -119,22 +126,84 @@ if main == 'Stocks':
             # st.markdown(str(o[0]['']))
             # st.subheader('')
             # st.markdown(str(o[0]['']))
+        if option== 'Horizontal':
+            opti=st.selectbox('Choose:', ('Main', 'Balance Sheet', 'Income Statement', 'Cash Flow'))
+            
+            if opti=='Main':
+            
+                rating=fmp.historical_rating(apikey, symbol, 15)
+                r=pd.DataFrame(rating)
+                r=r.set_index('date')
+                r=r[r.columns[2:]]
+                rc=r.columns
+                r=r.transpose()
+                r=r[r.columns[::-1]]
+                st.dataframe(r)
+                opt=st.selectbox('Plot', (rc))
+                st.bar_chart(r.loc[opt])
+                
+            if opti=='Balance Sheet':
+            
+                bg=fmp.balance_sheet_statement_growth(apikey, symbol, 15)
+                bgg=pd.DataFrame(bg)
+                bgg=bgg.set_index('date')
+                bgg=bgg[bgg.columns[2:]]
+                bgc=bgg.columns
+                bgg=bgg.transpose()
+                bgg=bgg[bgg.columns[::-1]]
+                st.dataframe(bgg)
+                opt=st.selectbox('Plot', bgc)
+                st.bar_chart(bgg.loc[opt])
+                
+            if opti=='Income Statement':
+            
+                bg=fmp.income_statement_growth(apikey, symbol, 15)
+                bgg=pd.DataFrame(bg)
+                bgg=bgg.set_index('date')
+                bgg=bgg[bgg.columns[2:]]
+                bgc=bgg.columns
+                bgg=bgg.transpose()
+                bgg=bgg[bgg.columns[::-1]]
+                st.dataframe(bgg)
+                opt=st.selectbox('Plot', bgc)
+                st.bar_chart(bgg.loc[opt])
+                
+            if opti=='Balance Sheet':
+            
+                bg=fmp.cash_flow_statement(apikey, symbol, 15)
+                bgg=pd.DataFrame(bg)
+                bgg=bgg.set_index('date')
+                bgg=bgg[bgg.columns[2:]]
+                bgc=bgg.columns
+                bgg=bgg.transpose()
+                bgg=bgg[bgg.columns[::-1]]
+                st.dataframe(bgg)
+                opt=st.selectbox('Plot', bgc)
+                st.bar_chart(bgg.loc[opt])
+            
+            
+            
         if option == 'Financials':
             
             data=st.sidebar.selectbox('Choose',('Balance Sheet','Income Statement','Cashflow Statement'))
             
             if data == 'Balance Sheet':
-                balance_sheets=fmp.company_valuation.balance_sheet_statement(apikey, symbol, 'quarter', 30)                
-                bsar=fmp.balance_sheet_statement_as_reported(apikey, symbol, 'quarter', 30)
+                
+                time=st.radio('Time Interval:',( 'quarter','annual'))
+                
+                balance_sheets=fmp.company_valuation.balance_sheet_statement(apikey, symbol, time, 30)                
+                # bsar=fmp.balance_sheet_statement_as_reported(apikey, symbol, 'quarter', 30)
 
-                bb=pd.DataFrame(bsar)
-                bb=bb.transpose()
+                # bb=pd.DataFrame(bsar)
+                # bb=bb.transpose()
 
-                ii=pd.DataFrame(fmp.income_statement_as_reported(apikey, symbol, 'quarter', 30))
-                ii=ii.transpose()
+                # ii=pd.DataFrame(fmp.income_statement_as_reported(apikey, symbol, 'quarter', 30))
+                # ii=ii.transpose()
 
                 balance_sheet=pd.DataFrame(balance_sheets)
                 balance_sheet=balance_sheet.set_index('date')
+                bsc=balance_sheet[balance_sheet.columns[7:]]
+                bsc=bsc.columns
                 balance_sheet=balance_sheet.transpose()
                 balance_sheet=balance_sheet[balance_sheet.columns[::-1]]
                 dates=pd.DataFrame(balance_sheet.columns)
@@ -157,66 +226,66 @@ if main == 'Stocks':
                 equity = balance_sheet.iloc[38:51,:]
                 st.dataframe(equity) 
                 
-                opt=st.selectbox('Histogram', ('totalCurrentAssets','totalNonCurrentAssets','totalCurrentLiabilities','totalNonCurrentLiabilities','totalEquity', 'netDebt',
-                'cashAndCashEquivalents','shortTermInvestments','cashAndShortTermInvestments','netReceivables',
-                'inventory','otherCurrentAssets','propertyPlantEquipmentNet','goodwill','intangibleAssets','goodwillAndIntangibleAssets',
-                'longTermInvestments','taxAssets','otherNonCurrentAssets','totalNonCurrentAssets','otherAssets',
-                'accountPayables','shortTermDebt','taxPayables','deferredRevenue','otherCurrentLiabilities',
-                'longTermDebt','deferredRevenueNonCurrent','deferredTaxLiabilitiesNonCurrent','otherNonCurrentLiabilities',
-                'otherLiabilities','capitalLeaseObligations','preferredStock','commonStock','retainedEarnings',
-                'accumulatedOtherComprehensiveIncomeLoss','othertotalStockholdersEquity','totalStockholdersEquity','totalLiabilitiesAndStockholdersEquity',
-                'minorityInterest'))
+                opt=st.selectbox('Histogram', (bsc))
                 
-                fig = plt.figure()
-                ax = fig.add_axes([0,0,1,1])
-                plt.title(opt)
-                ax.bar(dates['date'],balance_sheet.loc[opt])
-                # plt.yscale('log')
-                st.pyplot(fig)
+                chtype=st.radio('Chart type:', ('st.chart', 'Pyplot'))
                 
-            if data == 'Income Statement':
-                income_statements=fmp.company_valuation.income_statement(apikey, symbol, 'quarter', 30)
+                if chtype == 'st.chart':
+                
+                    st.bar_chart(balance_sheet.loc[opt])
+                
+                if chtype== 'Pyplot':
+                    
+                    fig = plt.figure()
+                    ax = fig.add_axes([0,0,1,1])
+                    plt.title(opt)
+                    ax.bar(dates['date'],balance_sheet.loc[opt])
+                    # plt.yscale('log')
+                    st.pyplot(fig)
+                    
+                if data == 'Income Statement':
+                    income_statements=fmp.company_valuation.income_statement(apikey, symbol, 'quarter', 30)
+        
+                    income_statement=pd.DataFrame(income_statements)
+                    income_statement=income_statement.set_index(income_statement['calendarYear']+' '+income_statement['period'])
+                    income_statement=income_statement.transpose()
+                    income_statement=income_statement[income_statement.columns[::-1]]
+                    dates=pd.DataFrame(income_statement.columns)
+                    # dq = [dates[i] for i in range(len(dates)) if i % 2 != 0]                
+                    
+        
+                    st.header("Income Statement")
+                    st.markdown('Currency: ' + income_statements[0]['reportedCurrency'])
+                    st.subheader("Revenues")
+                    revenues=income_statement.iloc[8:11,:]
+                    st.dataframe(revenues)
+                    st.subheader("Operating Expenses & Income")
+                    opex=income_statement.iloc[12:19,:]
+                    opex.loc['operatingIncome']=income_statement.loc['operatingIncome']
+                    st.dataframe(opex)
+                    st.subheader("EBITDA")
+                    ebitda=income_statement.iloc[20:23,:]
+                    st.dataframe(ebitda)
+                    st.subheader("EBT")
+                    ebt=income_statement.iloc[26:28,:]
+                    st.dataframe(ebt)
+                    st.subheader("Net Income")
+                    net_inc=income_statement.iloc[29:31,:]
+                    st.dataframe(net_inc)
+                    
+                    opt=st.selectbox('Histogram', ('revenue', 'costOfRevenue', 'grossProfit', 'researchAndDevelopmentExpenses',
+                                                   'generalAndAdministrativeExpenses', 'sellingAndMarketingExpenses', 'sellingGeneralAndAdministrativeExpenses',
+                                                   'otherExpenses', 'operatingExpenses', 'operatingIncome', 'costAndExpenses',
+                                                   'interestIncome', 'interestExpense', 'depreciationAndAmortization', 'ebitda', 'totalOtherIncomeExpensesNet',
+                                                   'incomeBeforeTax', 'incomeTaxExpense', 'netIncome', 'eps', 'epsdiluted', 'weightedAverageShsOut','weightedAverageShsOutDil' ))
     
-                income_statement=pd.DataFrame(income_statements)
-                income_statement=income_statement.set_index(income_statement['calendarYear']+' '+income_statement['period'])
-                income_statement=income_statement.transpose()
-                income_statement=income_statement[income_statement.columns[::-1]]
-                dates=pd.DataFrame(income_statement.columns)
-                # dq = [dates[i] for i in range(len(dates)) if i % 2 != 0]                
-                
-    
-                st.header("Income Statement")
-                st.markdown('Currency: ' + income_statements[0]['reportedCurrency'])
-                st.subheader("Revenues")
-                revenues=income_statement.iloc[8:11,:]
-                st.dataframe(revenues)
-                st.subheader("Operating Expenses & Income")
-                opex=income_statement.iloc[12:19,:]
-                opex.loc['operatingIncome']=income_statement.loc['operatingIncome']
-                st.dataframe(opex)
-                st.subheader("EBITDA")
-                ebitda=income_statement.iloc[20:23,:]
-                st.dataframe(ebitda)
-                st.subheader("EBT")
-                ebt=income_statement.iloc[26:28,:]
-                st.dataframe(ebt)
-                st.subheader("Net Income")
-                net_inc=income_statement.iloc[29:31,:]
-                st.dataframe(net_inc)
-                
-                opt=st.selectbox('Histogram', ('revenue', 'costOfRevenue', 'grossProfit', 'researchAndDevelopmentExpenses',
-                                               'generalAndAdministrativeExpenses', 'sellingAndMarketingExpenses', 'sellingGeneralAndAdministrativeExpenses',
-                                               'otherExpenses', 'operatingExpenses', 'operatingIncome', 'costAndExpenses',
-                                               'interestIncome', 'interestExpense', 'depreciationAndAmortization', 'ebitda', 'totalOtherIncomeExpensesNet',
-                                               'incomeBeforeTax', 'incomeTaxExpense', 'netIncome', 'eps', 'epsdiluted', 'weightedAverageShsOut','weightedAverageShsOutDil' ))
-
-                fig = plt.figure()
-                ax = fig.add_axes([0,0,1,1])
-                plt.title(opt)
-                ax.bar(dates[0],income_statement.loc[opt])
-                # plt.xticks(dq)
-                # plt.yscale('log')
-                st.pyplot(fig)
+                    fig = plt.figure()
+                    ax = fig.add_axes([0,0,1,1])
+                    plt.title(opt)
+                    ax.bar(dates[0],income_statement.loc[opt])
+                    # plt.xticks(dq)
+                    # plt.yscale('log')
+                    st.pyplot(fig)
                 
     
             
@@ -263,7 +332,7 @@ if main == 'Stocks':
             cashflow_statement=cashflow_statement.transpose()
             cashflow_statement=cashflow_statement[cashflow_statement.columns[::-1]]
             
-            opt=st.selectbox('Options', ('Compare','Liquidity & Solvency','Profitability & Efficiency','Valuation'))
+            opt=st.selectbox('Options', ('Compare','Liquidity & Solvency','Profitability & Efficiency','Valuation', 'Discounted Cash Flow'))
             ls=pd.DataFrame()
             ls['index']=dates
             ls=ls.set_index('index')
@@ -318,6 +387,8 @@ if main == 'Stocks':
             rats=fmp.financial_ratios(apikey, symbol, 'quarter', 20)
             rf=pd.DataFrame(rats)
             rf=rf.set_index('date')
+            rf=rf[rf.columns[2:]]
+            rc=rf.columns
             rf=rf.transpose()
             rf=rf[rf.columns[::-1]]
             
@@ -331,6 +402,21 @@ if main == 'Stocks':
                 lp=fmp.historical_daily_discounted_cash_flow(apikey, symbol, 300)
                 st.subheader("Main Ratios")    
                 st.dataframe(rf)
+                ox=st.selectbox('Plot:', rf.index)
+                
+                fig=plt.figure()
+                plt.figure(figsize=(12,5))
+                plt.title('Time series of'+ox)
+                plt.xlabel('Time')
+                plt.ylabel(ox)
+                # plt.plot(self.data_table['date'],self.data_table['price2'], self.data_table['price1'])
+                ax = plt.gca()
+                ax = rf.loc[ox].plot(kind='line', x=rf.columns, ax=ax, grid=True,\
+                                          color='blue', label=symbol+'s '+ox)
+                ax.legend(loc=2)
+                st.pyplot()
+
+                
             if opt == 'Liquidity & Solvency':
                 l=ls.transpose()            
                 li=l.iloc[0:4,:]
@@ -369,8 +455,8 @@ if main == 'Stocks':
                     st.pyplot(fig)
     
                 
-                na=st.multiselect('Plot', ['','Current ratio','Quick ratio','Cash ratio','Defensive interval',
-                                          'Debt to assets','Debt to capital','Debt to equity','Leverage ratio','FFO to Debt' ])
+                # na=st.multiselect('Plot', rc)
+                # st.line_chart(rf.loc[na])
             if opt=='Profitability & Efficiency':
                 o=ls.transpose()
                 
@@ -384,11 +470,18 @@ if main == 'Stocks':
                 st.dataframe(n)
                 st.subheader('Profitability')
                 st.dataframe(l)
-    
+            if opt== 'Discounted Cash Flow':
+                dcf=fmp.discounted_cash_flow(apikey, symbol)
+                dcfday=fmp.historical_daily_discounted_cash_flow(apikey, symbol,550)
                 
+                dcfdf=pd.DataFrame(dcfday)
+                p=fmp.historical_price_full(apikey, symbol)
         if option == 'Technical analysis':
             st.subheader('Technical analysis')
-            prices=pd.DataFrame(fmp.historical_price_full(apikey, symbol))
+            p=fmp.historical_price_full(apikey, symbol)
+            prices=pd.DataFrame(p)
+            # prices['date']=pd.to_datetime(prices['date'])
+            prices=prices.set_index('date')
             # pricess=requests.get('https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol=IBM&interval=5min&apikey=demo').json()['Time Series (5min)']
             
             # i=st.selectbox('Intraday'('4H', '1D', '1W', '1M'))
@@ -397,11 +490,7 @@ if main == 'Stocks':
             sma100=fmp.technical_indicators(apikey, symbol,100, 'sma')
             sma200=fmp.technical_indicators(apikey, symbol,200, 'sma')
             
-            fig = go.Figure(data=go.Candlestick(x=prices['date'],
-                            ope=prices.loc['open'],
-                            high=prices.loc['high'],
-                            low=prices.loc['low'],
-                            close=prices.loc['close']))
+            fig = go.Figure(data=[go.Candlestick(open=prices['open'],high= prices['high'], low=prices['low'], close=prices['close'])])
             
             st.plotly_chart(fig)
             
@@ -410,6 +499,7 @@ if main == 'Stocks':
         if option == 'Stats':
             prices=pd.DataFrame(fmp.historical_price_full(apikey, symbol))
             rr=pd.DataFrame()
+            prices=prices.set_index('date')
             rr['Values']=None
             rr=rr.transpose()
             rr['Mean']=np.mean(prices['changePercent'])
@@ -420,7 +510,10 @@ if main == 'Stocks':
             rr['Kurtosis']=scipy.stats.kurtosis(prices['changePercent'])
             rr['Sharpe']=rr['Mean'] / rr['Standard deviation'] * np.sqrt(252)
             rr['VaR 95%']=np.percentile(prices['changePercent'],5)
-            
+            # ri=pd.DataFrame()
+            # ri['Standard Deviation']=None
+            # ri['Standard Deviation']=rr.loc(['Standard deviation'])
+            # rr=rr.transpose()
             # counts, bins = np.histogram(prices['changePercent'], bins=range(0, 60, 5))
             # bins = 0.5 * (bins[:-1] + bins[1:])
             
@@ -428,12 +521,20 @@ if main == 'Stocks':
             # fig.show()
             
             # fig = px.histogram(prices['changePercent'], x=f'Histogram for {symbol} daily returns')
-            st.bar_chart(prices['changePercent'])
+            st.bar_chart(prices['changePercent'], 900, 400, True)
+            
+            fig=plt.figure()
+            plt.hist(prices['changePercent'],bins=100)
+            plt.title(symbol+' Daily Returns')
+            # plt.xlabel()
+            
+            st.pyplot(fig)
             
             
             # rr['CVaR 95%'] = np.mean(prices['close'][prices['close'] <= rr['VaR 95%']])
             st.subheader('Risk Metrics')
-            st.markdown('Mean is:'+np.round(rr['Standard deviation'],4)+'')
+            # st.markdown('Mean is:'+np.round(rr['Standard deviation'],4)+'')
+            st.dataframe(rr)
         if option == 'Social Sentiment':
             lol=st.selectbox('Options', ('Stocktwits','Twitter', 'Reddit', 'Google Trends'))
             if lol == 'Stocktwits':
