@@ -125,7 +125,14 @@ if main == 'Stocks':
             
             if data == 'Balance Sheet':
                 balance_sheets=fmp.company_valuation.balance_sheet_statement(apikey, symbol, 'quarter', 30)                
-                
+                bsar=fmp.balance_sheet_statement_as_reported(apikey, symbol, 'quarter', 30)
+
+                bb=pd.DataFrame(bsar)
+                bb=bb.transpose()
+
+                ii=pd.DataFrame(fmp.income_statement_as_reported(apikey, symbol, 'quarter', 30))
+                ii=ii.transpose()
+
                 balance_sheet=pd.DataFrame(balance_sheets)
                 balance_sheet=balance_sheet.set_index('date')
                 balance_sheet=balance_sheet.transpose()
@@ -171,30 +178,30 @@ if main == 'Stocks':
                 income_statements=fmp.company_valuation.income_statement(apikey, symbol, 'quarter', 30)
     
                 income_statement=pd.DataFrame(income_statements)
-                income_statement=income_statement.set_index('date')
+                income_statement=income_statement.set_index(income_statement['calendarYear']+' '+income_statement['period'])
                 income_statement=income_statement.transpose()
                 income_statement=income_statement[income_statement.columns[::-1]]
                 dates=pd.DataFrame(income_statement.columns)
-                
+                # dq = [dates[i] for i in range(len(dates)) if i % 2 != 0]                
                 
     
                 st.header("Income Statement")
                 st.markdown('Currency: ' + income_statements[0]['reportedCurrency'])
                 st.subheader("Revenues")
-                revenues=income_statement.iloc[7:10,:]
+                revenues=income_statement.iloc[8:11,:]
                 st.dataframe(revenues)
                 st.subheader("Operating Expenses & Income")
-                opex=income_statement.iloc[11:18,:]
+                opex=income_statement.iloc[12:19,:]
                 opex.loc['operatingIncome']=income_statement.loc['operatingIncome']
                 st.dataframe(opex)
                 st.subheader("EBITDA")
-                ebitda=income_statement.iloc[19:22,:]
+                ebitda=income_statement.iloc[20:23,:]
                 st.dataframe(ebitda)
                 st.subheader("EBT")
-                ebt=income_statement.iloc[25:27,:]
+                ebt=income_statement.iloc[26:28,:]
                 st.dataframe(ebt)
                 st.subheader("Net Income")
-                net_inc=income_statement.iloc[28:30,:]
+                net_inc=income_statement.iloc[29:31,:]
                 st.dataframe(net_inc)
                 
                 opt=st.selectbox('Histogram', ('revenue', 'costOfRevenue', 'grossProfit', 'researchAndDevelopmentExpenses',
@@ -202,12 +209,13 @@ if main == 'Stocks':
                                                'otherExpenses', 'operatingExpenses', 'operatingIncome', 'costAndExpenses',
                                                'interestIncome', 'interestExpense', 'depreciationAndAmortization', 'ebitda', 'totalOtherIncomeExpensesNet',
                                                'incomeBeforeTax', 'incomeTaxExpense', 'netIncome', 'eps', 'epsdiluted', 'weightedAverageShsOut','weightedAverageShsOutDil' ))
-                
+
                 fig = plt.figure()
                 ax = fig.add_axes([0,0,1,1])
                 plt.title(opt)
-                ax.bar(dates['date'],income_statement.loc[opt])
-                plt.yscale('log')
+                ax.bar(dates[0],income_statement.loc[opt])
+                # plt.xticks(dq)
+                # plt.yscale('log')
                 st.pyplot(fig)
                 
     
@@ -232,7 +240,6 @@ if main == 'Stocks':
                 
         if option == 'Valuation':
     
-            
             balance_sheets=fmp.company_valuation.balance_sheet_statement(apikey, symbol, 'quarter')
                     
             balance_sheet=pd.DataFrame(balance_sheets)
@@ -308,7 +315,7 @@ if main == 'Stocks':
             #Valuation
             
             
-            rats=fmp.financial_ratios(apikey, symbol, 'quarter', 200)
+            rats=fmp.financial_ratios(apikey, symbol, 'quarter', 20)
             rf=pd.DataFrame(rats)
             rf=rf.set_index('date')
             rf=rf.transpose()
@@ -319,8 +326,9 @@ if main == 'Stocks':
             if opt == 'Compare':
                 
                 
-                
-                
+                fmp.discounted_cash_flow(apikey, symbol)
+                fmp.enterprise_values(apikey, symbol, 'quarter', 20)
+                lp=fmp.historical_daily_discounted_cash_flow(apikey, symbol, 300)
                 st.subheader("Main Ratios")    
                 st.dataframe(rf)
             if opt == 'Liquidity & Solvency':
@@ -413,14 +421,14 @@ if main == 'Stocks':
             rr['Sharpe']=rr['Mean'] / rr['Standard deviation'] * np.sqrt(252)
             rr['VaR 95%']=np.percentile(prices['changePercent'],5)
             
-            counts, bins = np.histogram(prices['changePercent'], bins=range(0, 60, 5))
-            bins = 0.5 * (bins[:-1] + bins[1:])
+            # counts, bins = np.histogram(prices['changePercent'], bins=range(0, 60, 5))
+            # bins = 0.5 * (bins[:-1] + bins[1:])
             
-            fig = px.express.bar(x=bins, y=counts, labels={'x':f'Histogram for {symbol} daily returns', 'y':'count'})
+            # fig = px.express.bar(x=bins, y=counts, labels={'x':f'Histogram for {symbol} daily returns', 'y':'count'})
             # fig.show()
             
             # fig = px.histogram(prices['changePercent'], x=f'Histogram for {symbol} daily returns')
-            st.plotly_chart(fig)
+            st.bar_chart(prices['changePercent'])
             
             
             # rr['CVaR 95%'] = np.mean(prices['close'][prices['close'] <= rr['VaR 95%']])
