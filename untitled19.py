@@ -490,7 +490,7 @@ if main == 'Stocks':
             sma100=fmp.technical_indicators(apikey, symbol,100, 'sma')
             sma200=fmp.technical_indicators(apikey, symbol,200, 'sma')
             
-            fig = go.Figure(data=[go.Candlestick(open=prices['open'],high= prices['high'], low=prices['low'], close=prices['close'])])
+            fig = go.Figure(data=[go.Candlestick(x=prices.index, open=prices['open'],high= prices['high'], low=prices['low'], close=prices['close'])])
             
             st.plotly_chart(fig)
             
