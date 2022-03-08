@@ -396,25 +396,29 @@ if main == 'Stocks':
         
             if opt == 'Compare':
                 
+                # st.set_option('deprecation.showPyplotGlobalUse', False)
                 
                 fmp.discounted_cash_flow(apikey, symbol)
                 fmp.enterprise_values(apikey, symbol, 'quarter', 20)
                 lp=fmp.historical_daily_discounted_cash_flow(apikey, symbol, 300)
                 st.subheader("Main Ratios")    
                 st.dataframe(rf)
-                ox=st.selectbox('Plot:', rf.index)
+                ox=st.multiselect('Plot:', rf.index)
                 
                 fig=plt.figure()
-                plt.figure(figsize=(12,5))
-                plt.title('Time series of'+ox)
-                plt.xlabel('Time')
-                plt.ylabel(ox)
-                # plt.plot(self.data_table['date'],self.data_table['price2'], self.data_table['price1'])
-                ax = plt.gca()
-                ax = rf.loc[ox].plot(kind='line', x=rf.columns, ax=ax, grid=True,\
-                                          color='blue', label=symbol+'s '+ox)
-                ax.legend(loc=2)
-                st.pyplot()
+                
+                # for element in ox:
+                for i in range(0, len(ox)):
+                         
+                        plt.figure(figsize=(12,5))
+                        plt.title('Time series of '+ox[i]+' | '+symbol)
+                        plt.xlabel('Time')
+                        plt.ylabel('')
+                        # plt.plot(self.data_table['date'],self.data_table['price2'], self.data_table['price1'])
+                        ax = plt.gca()
+                        ax = rf.loc[ox[i]].plot(kind='line', x=rf.columns, ax=ax, grid=True, label=symbol+'s '+ox[i])
+                        ax.legend(loc=2)
+                        st.pyplot()
 
                 
             if opt == 'Liquidity & Solvency':
@@ -478,7 +482,7 @@ if main == 'Stocks':
                 p=fmp.historical_price_full(apikey, symbol)
         if option == 'Technical analysis':
             st.subheader('Technical analysis')
-            p=fmp.historical_price_full(apikey, symbol)
+            p=fmp.historical_price_full(apikey, symbol, 600, )
             prices=pd.DataFrame(p)
             # prices['date']=pd.to_datetime(prices['date'])
             prices=prices.set_index('date')
@@ -486,31 +490,40 @@ if main == 'Stocks':
             
             # i=st.selectbox('Intraday'('4H', '1D', '1W', '1M'))
             
-            sma50=fmp.technical_indicators(apikey, symbol,50, 'sma')
-            sma100=fmp.technical_indicators(apikey, symbol,100, 'sma')
-            sma200=fmp.technical_indicators(apikey, symbol,200, 'sma')
+            sma50=prices['close'].rolling(window=50).mean()
+            sma100=prices['close'].rolling(window=100).mean()
+            sma200=prices['close'].rolling(window=200).mean()
             
-            fig = go.Figure(data=[go.Candlestick(x=prices.index, open=prices['open'],high= prices['high'], low=prices['low'], close=prices['close'])])
+            # sma50=fmp.technical_indicators(apikey, symbol,50, 'sma')
+            # sma100=fmp.technical_indicators(apikey, symbol,100, 'sma')
+            # sma200=fmp.technical_indicators(apikey, symbol,200, 'sma')
+            
+            
+            
+            fig = go.Figure(go.Candlestick(x=prices.index,
+                                           open=prices['open'],
+                                           high= prices['high'],
+                                           low=prices['low'],
+                                           close=prices['close'],
+                                           name=symbol
+                                           )
+                            )
             
             fig.add_trace(go.Scatter(x=prices.index, 
-                                     y=sma50, 
-                                     opacity=0.7, 
-                                     line=dict(color='blue', width=2), 
-                                     name='MA 50'
-                                    )
-                         )
+                         y=sma50, 
+                         opacity=0.7, 
+                         line=dict(color='blue', width=2), 
+                         name='MA 50'))
             fig.add_trace(go.Scatter(x=price.index, 
                                      y=sma200, 
                                      opacity=0.7, 
                                      line=dict(color='green', width=2), 
-                                     name='MA 200'
-                                    )
-                         )
-            
-            st.plotly_chart(fig)
+                                     name='MA 200'))
             
             
-            
+            st.plotly_chart(fig,use_container_width = True)
+                        
+        
         if option == 'Stats':
             prices=pd.DataFrame(fmp.historical_price_full(apikey, symbol))
             rr=pd.DataFrame()
