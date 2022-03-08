@@ -514,7 +514,7 @@ if main == 'Stocks':
                          opacity=0.7, 
                          line=dict(color='blue', width=2), 
                          name='MA 50'))
-            fig.add_trace(go.Scatter(x=price.index, 
+            fig.add_trace(go.Scatter(x=prices.index, 
                                      y=sma200, 
                                      opacity=0.7, 
                                      line=dict(color='green', width=2), 
