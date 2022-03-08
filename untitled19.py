@@ -491,7 +491,7 @@ if main == 'Stocks':
             # i=st.selectbox('Intraday'('4H', '1D', '1W', '1M'))
             
             sma=pd.DataFrame()
-            sma=sma.set_index(price['date'])
+            sma=sma.set_index(prices['date'])
 
             sma['sma50']=prices['close'].rolling(window=50).mean()
             sma100=prices['close'].rolling(window=100).mean()
