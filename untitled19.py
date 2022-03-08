@@ -491,6 +491,7 @@ if main == 'Stocks':
             # i=st.selectbox('Intraday'('4H', '1D', '1W', '1M'))
             
             sma50=prices['close'].rolling(window=50).mean()
+            sma50=sma50.set_index(price['date'])
             sma100=prices['close'].rolling(window=100).mean()
             sma200=prices['close'].rolling(window=200).mean()
             
