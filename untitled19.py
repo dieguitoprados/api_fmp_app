@@ -492,6 +492,21 @@ if main == 'Stocks':
             
             fig = go.Figure(data=[go.Candlestick(x=prices.index, open=prices['open'],high= prices['high'], low=prices['low'], close=prices['close'])])
             
+            fig.add_trace(go.Scatter(x=prices.index, 
+                                     y=sma50, 
+                                     opacity=0.7, 
+                                     line=dict(color='blue', width=2), 
+                                     name='MA 50'
+                                    )
+                         )
+            fig.add_trace(go.Scatter(x=price.index, 
+                                     y=sma200, 
+                                     opacity=0.7, 
+                                     line=dict(color='green', width=2), 
+                                     name='MA 200'
+                                    )
+                         )
+            
             st.plotly_chart(fig)
             
             
