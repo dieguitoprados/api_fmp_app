@@ -487,11 +487,11 @@ if main == 'Stocks':
             # prices['date']=pd.to_datetime(prices['date'])
             prices=prices.set_index('date')
             # pricess=requests.get('https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol=IBM&interval=5min&apikey=demo').json()['Time Series (5min)']
-            
+            l=prices.index
             # i=st.selectbox('Intraday'('4H', '1D', '1W', '1M'))
             
             sma=pd.DataFrame()
-            sma=sma.set_index(prices.index.transpose())
+            sma=sma.set_index(l)
 
             sma['sma50']=prices['close'].rolling(window=50).mean()
             sma100=prices['close'].rolling(window=100).mean()
@@ -503,7 +503,7 @@ if main == 'Stocks':
             
             
             
-            fig = go.Figure(go.Candlestick(x=prices.index,
+            fig = go.Figure(go.Candlestick(x=l,
                                            open=prices['open'],
                                            high= prices['high'],
                                            low=prices['low'],
@@ -512,12 +512,12 @@ if main == 'Stocks':
                                            )
                             )
             
-            fig.add_trace(go.Scatter(x=prices.index, 
+            fig.add_trace(go.Scatter(x=l, 
                          y=sma['sma50'], 
                          opacity=0.7, 
                          line=dict(color='blue', width=2), 
                          name='MA 50'))
-            fig.add_trace(go.Scatter(x=prices.index, 
+            fig.add_trace(go.Scatter(x=l, 
                                      y=sma200, 
                                      opacity=0.7, 
                                      line=dict(color='green', width=2), 
