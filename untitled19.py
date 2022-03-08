@@ -491,7 +491,7 @@ if main == 'Stocks':
             # i=st.selectbox('Intraday'('4H', '1D', '1W', '1M'))
             
             sma=pd.DataFrame()
-            sma=sma.set_index(prices['date'])
+            sma=sma.set_index(prices.index)
 
             sma['sma50']=prices['close'].rolling(window=50).mean()
             sma100=prices['close'].rolling(window=100).mean()
@@ -605,10 +605,15 @@ if main == 'Stocks':
             opt=st.selectbox('Topic', j.keys())
             for i in range (0,len(j[opt])):
                 opti=st.markdown(j[opt][i])
+                
+                
+        if option=='Insider Transactions':
+            ins=fmp.insider_trading(apikey, symbol, limit=100)
+            ni=pd.DataFrame(ins)
     
-    
-            g=fmp.financial_growth(apikey, symbol)
             fmp.commodities.commodities_list(apikey)
+            for i in range(0, len(ni)):
+                st.markdown(ni['transactionDate'][i]+' | '+ni['reportingName'][i]+' | '+ni['typeOfOwner'][i]+' | '+str(ni['securitiesOwned'][i])+' | '+ni['transactionType'][i]+' | '+ni['acquistionOrDisposition'][i]+' | '+str(ni['securitiesTransacted'][i])+' | '+str(ni['price'][i])+' | '+ni['securityName'][i])
             # for element in j:
     
                 # st.markdown(element)
