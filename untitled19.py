@@ -21,7 +21,20 @@ apikey='d60d2f087ecf05f94a3b9b3df34310a9'
 
 main=st. selectbox('APPS', ('Home', 'Stocks', 'ETFs & Indices','Cryptocurrencies','Forex', 'Fixed income', 'Commodities'))
 if main == 'Home':
-    ch=st.selectbox('Quick options:', ('Wire news', 'Calendars','Main indices','Hot stocks', 'Commodities'  ))
+    ch=st.selectbox('Quick options:', ('Home', 'Wire news', 'Calendars','Main indices','Hot stocks', 'Commodities'  ))
+    
+    if ch=='Home':
+        sec=pd.DataFrame(fmp.sectors_performance(apikey)).sort_values(by='changesPercentage', ascending=False)
+        sec=sec.set_index('sector')
+        fig = plt.figure()
+        ax = fig.add_axes([0,0,1,1])
+        plt.title('Sectors Performance')
+        ax.barh(sec.index, sec['changesPercentage'], )
+        # plt.yscale('log')
+        st.pyplot(fig)
+    
+    
+    
     
     if ch=='Wire news':
         r=requests.get('https://api.nytimes.com/svc/news/v3/content/all/all.json?api-key=XJ0LXsOASAnkltrGDXBpxFnOxlxpBsg9').json()
@@ -112,8 +125,25 @@ if main == 'Stocks':
             st.header(str(o[0]['companyName'])+' | '+str(o[0]['exchange'])+' | '+str(o[0]['symbol'])+
                       ' | ISIN:'+str(o[0]['isin'])+' | CIK:'+str(o[0]['cik']))
             st.metric('Price',str(o[0]['price'])+' '+o[0]['currency'], str(np.round(o[0]['changes'],4))+'  |  '+str(np.round(np.round(o[0]['changes'],4)/(o[0]['price']-np.round(o[0]['changes'],4))*100,4))+'%')
-            st.markdown('Sector and industry: '+str(o[0]['sector'])+' | '+str(o[0]['industry'])) 
+            st.subheader('Sector and industry: '+str(o[0]['sector'])+' | '+str(o[0]['industry'])) 
             
+            fig=plt.figure(figsize=(12,5))
+            plt.title('Time series of '+symbol)
+            plt.xlabel('Time')
+            plt.ylabel('Prices')
+            
+            df=pd.DataFrame(fmp.historical_price_full(apikey, symbol))            
+            df=df.reindex(index=df.index[::-1])
+            df=df.set_index('date')
+
+            
+            ax = plt.gca()
+
+            # plt.plot(self.data_table['date'],self.data_table['price2'], self.data_table['price1'])
+            ax = df['close'].plot(kind='line', x=df.index, ax=ax, grid=True,\
+                                      color='blue', label=symbol)
+            ax.legend(loc=2)
+            st.pyplot(fig)            
             
             
             st.subheader('Company profile')
@@ -243,51 +273,51 @@ if main == 'Stocks':
                     # plt.yscale('log')
                     st.pyplot(fig)
                     
-                if data == 'Income Statement':
-                    income_statements=fmp.company_valuation.income_statement(apikey, symbol, 'quarter', 30)
-        
-                    income_statement=pd.DataFrame(income_statements)
-                    income_statement=income_statement.set_index(income_statement['calendarYear']+' '+income_statement['period'])
-                    income_statement=income_statement.transpose()
-                    income_statement=income_statement[income_statement.columns[::-1]]
-                    dates=pd.DataFrame(income_statement.columns)
-                    # dq = [dates[i] for i in range(len(dates)) if i % 2 != 0]                
-                    
-        
-                    st.header("Income Statement")
-                    st.markdown('Currency: ' + income_statements[0]['reportedCurrency'])
-                    st.subheader("Revenues")
-                    revenues=income_statement.iloc[8:11,:]
-                    st.dataframe(revenues)
-                    st.subheader("Operating Expenses & Income")
-                    opex=income_statement.iloc[12:19,:]
-                    opex.loc['operatingIncome']=income_statement.loc['operatingIncome']
-                    st.dataframe(opex)
-                    st.subheader("EBITDA")
-                    ebitda=income_statement.iloc[20:23,:]
-                    st.dataframe(ebitda)
-                    st.subheader("EBT")
-                    ebt=income_statement.iloc[26:28,:]
-                    st.dataframe(ebt)
-                    st.subheader("Net Income")
-                    net_inc=income_statement.iloc[29:31,:]
-                    st.dataframe(net_inc)
-                    
-                    opt=st.selectbox('Histogram', ('revenue', 'costOfRevenue', 'grossProfit', 'researchAndDevelopmentExpenses',
-                                                   'generalAndAdministrativeExpenses', 'sellingAndMarketingExpenses', 'sellingGeneralAndAdministrativeExpenses',
-                                                   'otherExpenses', 'operatingExpenses', 'operatingIncome', 'costAndExpenses',
-                                                   'interestIncome', 'interestExpense', 'depreciationAndAmortization', 'ebitda', 'totalOtherIncomeExpensesNet',
-                                                   'incomeBeforeTax', 'incomeTaxExpense', 'netIncome', 'eps', 'epsdiluted', 'weightedAverageShsOut','weightedAverageShsOutDil' ))
+            if data == 'Income Statement':
+                income_statements=fmp.company_valuation.income_statement(apikey, symbol, 'quarter', 30)
     
-                    fig = plt.figure()
-                    ax = fig.add_axes([0,0,1,1])
-                    plt.title(opt)
-                    ax.bar(dates[0],income_statement.loc[opt])
-                    # plt.xticks(dq)
-                    # plt.yscale('log')
-                    st.pyplot(fig)
+                income_statement=pd.DataFrame(income_statements)
+                income_statement=income_statement.set_index(income_statement['calendarYear']+' '+income_statement['period'])
+                income_statement=income_statement.transpose()
+                income_statement=income_statement[income_statement.columns[::-1]]
+                dates=pd.DataFrame(income_statement.columns)
+                # dq = [dates[i] for i in range(len(dates)) if i % 2 != 0]                
                 
     
+                st.header("Income Statement")
+                st.markdown('Currency: ' + income_statements[0]['reportedCurrency'])
+                st.subheader("Revenues")
+                revenues=income_statement.iloc[8:11,:]
+                st.dataframe(revenues)
+                st.subheader("Operating Expenses & Income")
+                opex=income_statement.iloc[12:19,:]
+                opex.loc['operatingIncome']=income_statement.loc['operatingIncome']
+                st.dataframe(opex)
+                st.subheader("EBITDA")
+                ebitda=income_statement.iloc[20:23,:]
+                st.dataframe(ebitda)
+                st.subheader("EBT")
+                ebt=income_statement.iloc[26:28,:]
+                st.dataframe(ebt)
+                st.subheader("Net Income")
+                net_inc=income_statement.iloc[29:31,:]
+                st.dataframe(net_inc)
+                
+                opt=st.selectbox('Histogram', ('revenue', 'costOfRevenue', 'grossProfit', 'researchAndDevelopmentExpenses',
+                                               'generalAndAdministrativeExpenses', 'sellingAndMarketingExpenses', 'sellingGeneralAndAdministrativeExpenses',
+                                               'otherExpenses', 'operatingExpenses', 'operatingIncome', 'costAndExpenses',
+                                               'interestIncome', 'interestExpense', 'depreciationAndAmortization', 'ebitda', 'totalOtherIncomeExpensesNet',
+                                               'incomeBeforeTax', 'incomeTaxExpense', 'netIncome', 'eps', 'epsdiluted', 'weightedAverageShsOut','weightedAverageShsOutDil' ))
+
+                fig = plt.figure()
+                ax = fig.add_axes([0,0,1,1])
+                plt.title(opt)
+                ax.bar(dates[0],income_statement.loc[opt])
+                # plt.xticks(dq)
+                # plt.yscale('log')
+                st.pyplot(fig)
+            
+    # fmp.enterprise_values(apikey, symbol)
             
             if data == 'Cashflow Statement':
                 cashflow_statements=fmp.company_valuation.cash_flow_statement(apikey, symbol, 'quarter', 30)
@@ -304,12 +334,28 @@ if main == 'Stocks':
     
                 st.dataframe(cashflow_statement.iloc[7:,:])
                 
-                
+                comp=fmp.stock_screener(apikey, industry='Communication Equipment', limit=600)
+                c=pd.DataFrame(comp)
+                c=c[c.exchangeShortName.isin(['NYSE','NASDAQ'])]
+                ratios=pd.DataFrame(index=(fmp.financial_ratios(apikey, symbol, 'quarter', 1)[0].keys()))
+                for stock in c['symbol']:
+                    try:
+                    
+                        ratios[stock]=fmp.financial_ratios(apikey, stock, 'quarter', 1)[0].values()
+                    except Exception:
+                        continue
+                    
+                #     p=pd.DataFrame()
+                # for i in range(3, len(ratios)):
+                #     print(np.mean(ratios.iloc[i]))
+                #     # for i in range(0,len(c)):
+                        # ratios[stock]=pd.DataFrame(fmp.financial_ratios(apikey, stock, 'quarter', 1)[0].values())
                 # opt=st.selectbox('Histogram', (
+                # c=c[us]
                 
         if option == 'Valuation':
     
-            balance_sheets=fmp.company_valuation.balance_sheet_statement(apikey, symbol, 'quarter')
+            balance_sheets=fmp.company_valuation.balance_sheet_statement(apikey, symbol, 'quarter', 20)
                     
             balance_sheet=pd.DataFrame(balance_sheets)
             balance_sheet=balance_sheet.set_index('date')
@@ -488,10 +534,12 @@ if main == 'Stocks':
             prices=prices.set_index('date')
             # pricess=requests.get('https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol=IBM&interval=5min&apikey=demo').json()['Time Series (5min)']
             l=prices.index
+            l=l.transpose()
             # i=st.selectbox('Intraday'('4H', '1D', '1W', '1M'))
             
             sma=pd.DataFrame()
-            sma=sma.set_index(l)
+            sma['date']=l[::-1]
+            sma=sma.set_index('date')
 
             sma['sma50']=prices['close'].rolling(window=50).mean()
             sma100=prices['close'].rolling(window=100).mean()
@@ -541,6 +589,19 @@ if main == 'Stocks':
             rr['Kurtosis']=scipy.stats.kurtosis(prices['changePercent'])
             rr['Sharpe']=rr['Mean'] / rr['Standard deviation'] * np.sqrt(252)
             rr['VaR 95%']=np.percentile(prices['changePercent'],5)
+            rr['CVaR 95%']= np.mean(prices['changePercent'][prices['changePercent'] <= np.percentile(prices['changePercent'],5)])
+            
+            
+            nb_decimals = 4
+            plot_str = 'mean: ' + str(np.round(rr['Mean']['Values'],nb_decimals))\
+                + ' | median: ' + str(np.round(rr['Median']['Values'],nb_decimals))\
+                + ' | std dev: ' + str(np.round(rr['Standard deviation']['Values'],nb_decimals))\
+                + ' | skewness: ' + str(np.round(rr['Skewness']['Values'],nb_decimals)) + '\n'\
+                + 'kurtosis: ' + str(np.round(rr['Kurtosis']['Values'],nb_decimals))\
+                + ' | Sharpe annual: ' + str(np.round(rr['Sharpe']['Values'],nb_decimals))\
+                + ' | VaR 95%: ' + str(np.round(rr['VaR 95%']['Values'],nb_decimals))\
+                + ' | CVaR 95%: ' + str(np.round(rr['CVaR 95%']['Values'],nb_decimals))
+                
             # ri=pd.DataFrame()
             # ri['Standard Deviation']=None
             # ri['Standard Deviation']=rr.loc(['Standard deviation'])
@@ -552,12 +613,12 @@ if main == 'Stocks':
             # fig.show()
             
             # fig = px.histogram(prices['changePercent'], x=f'Histogram for {symbol} daily returns')
-            st.bar_chart(prices['changePercent'], 900, 400, True)
+            # st.bar_chart(prices['changePercent'], 900, 400, True)
             
             fig=plt.figure()
-            plt.hist(prices['changePercent'],bins=100)
+            plt.hist(prices['changePercent'],bins=120)
             plt.title(symbol+' Daily Returns')
-            # plt.xlabel()
+            plt.xlabel(plot_str)
             
             st.pyplot(fig)
             
@@ -572,7 +633,7 @@ if main == 'Stocks':
                 nft='NFT'
                 
         if option== 'News':
-            select=st.selectbox('Options', ('News and articles','Press releases'))
+            select=st.selectbox('Options', ('Press releases', 'News and articles'))
             news=fmp.stock_news(apikey, symbol, 20)            
             press=fmp.press_releases(apikey, symbol, 20)
             if select == 'News and articles':
