@@ -2,7 +2,6 @@ matplotlib
 pandas
 requests
 numpy
-importlib
 datetime
 scipy
 pandas_datareader
